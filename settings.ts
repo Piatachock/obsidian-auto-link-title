@@ -10,8 +10,8 @@ export interface AutoLinkTitleSettings {
   shouldReplaceSelection: boolean;
   enhanceDefaultPaste: boolean;
   websiteBlacklist: string;
-  titleRegexes: [RegExp, string][];
-  urlRegexes: [RegExp, string][];
+  titleRegexes: string;
+  urlRegexes: string;
 }
 
 export const DEFAULT_SETTINGS: AutoLinkTitleSettings = {
@@ -27,8 +27,8 @@ export const DEFAULT_SETTINGS: AutoLinkTitleSettings = {
   shouldReplaceSelection: true,
   enhanceDefaultPaste: true,
   websiteBlacklist: "",
-  titleRegexes: [[/\s@\sТрекер/, ""]],
-  urlRegexes: [[/^([A-Z]+-\d+)$/, "https://st.yandex-team.ru/$1"]],
+  titleRegexes: "",
+  urlRegexes: "",
 };
 
 export class AutoLinkTitleSettingTab extends PluginSettingTab {
@@ -87,6 +87,36 @@ export class AutoLinkTitleSettingTab extends PluginSettingTab {
             this.plugin.settings.websiteBlacklist = value;
             await this.plugin.saveSettings();
           })
+      );
+
+    new Setting(containerEl)
+      .setName("Title replacement regexes")
+      .setDesc(
+        "List of regexes, one per line, that will be applied to change website title."
+      )
+      .addTextArea((val) =>
+        val
+        .setValue(this.plugin.settings.titleRegexes)
+        .setPlaceholder("To-replace $1-$1")
+        .onChange(async (value: string) => {
+          this.plugin.settings.titleRegexes = value;
+          await this.plugin.saveSettings();
+        })
+      );
+
+    new Setting(containerEl)
+      .setName("Url replacement regexes")
+      .setDesc(
+        "List of regexes, one per line, that will be applied to change URL."
+      )
+      .addTextArea((val) =>
+        val
+        .setValue(this.plugin.settings.urlRegexes)
+        .setPlaceholder("(.*\.my-stuff\.com) www.$1")
+        .onChange(async (value: string) => {
+          this.plugin.settings.urlRegexes = value;
+          await this.plugin.saveSettings();
+        })
       );
   }
 }

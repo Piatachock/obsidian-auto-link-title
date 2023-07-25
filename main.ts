@@ -16,12 +16,12 @@ export default class AutoLinkTitle extends Plugin {
   settings: AutoLinkTitleSettings;
   pasteFunction: PasteFunction;
   blacklist: Array<string>;
+  titleRegexes: Array<[RegExp, string]>;
+  urlRegexes: Array<[RegExp, string]>;
 
   async onload() {
     console.log("loading obsidian-auto-link-title");
     await this.loadSettings();
-
-    this.blacklist = this.settings.websiteBlacklist.split(",").map(s => s.trim()).filter(s => s.length > 0)
 
     // Listen to paste event
     this.pasteFunction = this.pasteUrlWithTitle.bind(this);
@@ -237,13 +237,13 @@ export default class AutoLinkTitle extends Plugin {
 
   applyTitleRegexes(text: string): string {
     let result = text;
-    this.settings.titleRegexes.forEach(data => {result = result.replace(data[0], data[1])});
+    this.titleRegexes.forEach(data => {result = result.replace(data[0], data[1])});
     return result;
   }
 
   applyUrlRegexes(text: string): string {
     let result = text;
-    this.settings.urlRegexes.forEach(data => {result = result.replace(data[0], data[1])});
+    this.urlRegexes.forEach(data => {result = result.replace(data[0], data[1])});
     return result;
   }
 
@@ -277,11 +277,30 @@ export default class AutoLinkTitle extends Plugin {
     console.log("unloading obsidian-auto-link-title");
   }
 
+  parseRegexesSettings(value: string): [RegExp, string][] {
+    return (
+      value
+      .split('\n')
+      .map(line => {
+        let [regex, replace] = line.split(' ');
+        return [new RegExp(regex), replace];
+      })
+    )
+  }
+
+  syncSettings() {
+    this.blacklist = this.settings.websiteBlacklist.split(",").map(s => s.trim()).filter(s => s.length > 0)
+    this.titleRegexes = this.parseRegexesSettings(this.settings.titleRegexes);
+    this.urlRegexes = this.parseRegexesSettings(this.settings.urlRegexes);
+  }
+
   async loadSettings() {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    this.syncSettings();
   }
 
   async saveSettings() {
+    this.syncSettings();
     await this.saveData(this.settings);
   }
 }
