@@ -77,6 +77,8 @@ export default class AutoLinkTitle extends Plugin {
 
     let selectedText = (EditorExtensions.getSelectedText(editor) || "").trim();
 
+    selectedText = this.applyUrlRegexes(selectedText);
+
     // If the cursor is on a raw html link, convert to a markdown link and fetch title
     if (CheckIf.isUrl(selectedText)) {
       this.convertUrlToTitledLink(editor, selectedText);
@@ -107,6 +109,8 @@ export default class AutoLinkTitle extends Plugin {
 
     var clipboardText = await navigator.clipboard.readText();
     if (clipboardText == null || clipboardText == "") return;
+
+    clipboardText = this.applyUrlRegexes(clipboardText);
 
     // If its not a URL, we return false to allow the default paste handler to take care of it.
     // Similarly, image urls don't have a meaningful <title> attribute so downloading it
@@ -152,9 +156,12 @@ export default class AutoLinkTitle extends Plugin {
     let clipboardText = clipboard.clipboardData.getData("text/plain");
     if (clipboardText === null || clipboardText === "") return;
 
+    clipboardText = this.applyUrlRegexes(clipboardText);
+
     // If its not a URL, we return false to allow the default paste handler to take care of it.
     // Similarly, image urls don't have a meaningful <title> attribute so downloading it
     // to fetch the title is a waste of bandwidth.
+
     if (!CheckIf.isUrl(clipboardText) || CheckIf.isImage(clipboardText)) {
       return;
     }
@@ -203,7 +210,8 @@ export default class AutoLinkTitle extends Plugin {
 
     // Fetch title from site, replace Fetching Title with actual title
     const title = await this.fetchUrlTitle(url);
-    const escapedTitle = this.escapeMarkdown(title);
+    const replacedTitle = this.applyTitleRegexes(title);
+    const escapedTitle = this.escapeMarkdown(replacedTitle);
 
     const text = editor.getValue();
 
@@ -227,6 +235,18 @@ export default class AutoLinkTitle extends Plugin {
     return escaped;
   }
 
+  applyTitleRegexes(text: string): string {
+    let result = text;
+    this.settings.titleRegexes.forEach(data => {result = result.replace(data[0], data[1])});
+    return result;
+  }
+
+  applyUrlRegexes(text: string): string {
+    let result = text;
+    this.settings.urlRegexes.forEach(data => {result = result.replace(data[0], data[1])});
+    return result;
+  }
+
   async fetchUrlTitle(url: string): Promise<string> {
     try {
       const title = await getPageTitle(url);
@@ -239,7 +259,7 @@ export default class AutoLinkTitle extends Plugin {
 
   public getUrlFromLink(link: string): string {
     let urlRegex = new RegExp(DEFAULT_SETTINGS.linkRegex);
-    return urlRegex.exec(link)[2];
+    return this.applyUrlRegexes(urlRegex.exec(link)[2]);
   }
 
   // Custom hashid by @shabegom

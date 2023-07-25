@@ -10,6 +10,8 @@ export interface AutoLinkTitleSettings {
   shouldReplaceSelection: boolean;
   enhanceDefaultPaste: boolean;
   websiteBlacklist: string;
+  titleRegexes: [RegExp, string][];
+  urlRegexes: [RegExp, string][];
 }
 
 export const DEFAULT_SETTINGS: AutoLinkTitleSettings = {
@@ -25,6 +27,8 @@ export const DEFAULT_SETTINGS: AutoLinkTitleSettings = {
   shouldReplaceSelection: true,
   enhanceDefaultPaste: true,
   websiteBlacklist: "",
+  titleRegexes: [[/\s@\sТрекер/, ""]],
+  urlRegexes: [[/^([A-Z]+-\d+)$/, "https://st.yandex-team.ru/$1"]],
 };
 
 export class AutoLinkTitleSettingTab extends PluginSettingTab {
