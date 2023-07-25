@@ -112,7 +112,7 @@ async function tryGetFileType(url: string) {
   }
 }
 
-export default async function getPageTitle(url: string): Promise<string> {
+export async function getPageTitle(url: string): Promise<string> {
   // If we're on Desktop use the Electron scraper
   if (!(url.startsWith("http") || url.startsWith("https"))) {
     url = "https://" + url;
@@ -129,5 +129,28 @@ export default async function getPageTitle(url: string): Promise<string> {
     return electronGetPageTitle(url);
   } else {
     return nonElectronGetPageTitle(url);
+  }
+}
+
+export async function openPage(url: string): Promise<void> {
+  if (!(url.startsWith("http") || url.startsWith("https"))) {
+    url = "https://" + url;
+  }
+
+  if (electronPkg != null) {
+    const { remote } = electronPkg;
+    const { BrowserWindow } = remote;
+
+    const window = new BrowserWindow({
+      width: 1000,
+      height: 600,
+      webPreferences: {
+        webSecurity: false,
+        nodeIntegration: true,
+      },
+      show: true,
+    });
+    window.webContents.setAudioMuted(true);
+    await load(window, url);
   }
 }

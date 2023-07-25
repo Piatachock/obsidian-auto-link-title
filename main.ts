@@ -6,7 +6,7 @@ import {
   DEFAULT_SETTINGS,
 } from "./settings";
 import { CheckIf } from "checkif";
-import getPageTitle from "scraper";
+import { getPageTitle, openPage } from "scraper";
 
 interface PasteFunction {
   (this: HTMLElement, ev: ClipboardEvent): void;
@@ -59,6 +59,13 @@ export default class AutoLinkTitle extends Plugin {
           key: "e",
         },
       ],
+    });
+
+    this.addCommand({
+      id: "open-url-for-authorization",
+      name: "Open URL for authorization",
+      editorCallback: (editor) => this.openLinkForAuthorization(editor),
+      hotkeys: [],
     });
 
     this.addSettingTab(new AutoLinkTitleSettingTab(this.app, this));
@@ -127,6 +134,11 @@ export default class AutoLinkTitle extends Plugin {
     // At this point we're just pasting a link in a normal fashion, fetch its title.
     this.convertUrlToTitledLink(editor, clipboardText);
     return;
+  }
+
+  async openLinkForAuthorization(editor: Editor): Promise<void> {
+    let selectedText = (EditorExtensions.getSelectedText(editor) || "").trim();
+    await openPage(selectedText);
   }
 
   async pasteUrlWithTitle(clipboard: ClipboardEvent, editor: Editor): Promise<void> {
