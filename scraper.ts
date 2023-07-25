@@ -35,7 +35,8 @@ async function electronGetPageTitle(url: string): Promise<string> {
     });
     window.webContents.setAudioMuted(true);
 
-    await load(window, url);
+    await load(window, url)
+    await new Promise<void>((resolve) => { setTimeout(resolve, 300) });
 
     try {
       const title = window.webContents.getTitle();
